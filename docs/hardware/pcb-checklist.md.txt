@@ -1,0 +1,100 @@
+
+    
+  
+# Strata first-board schematic TODO
+
+## Agreed scope
+
+Headless Linux SBC based on MPFS025 in FCVG484, with a common-PCB population
+path to MPFS095/160/250. Include system DDR, removable Linux storage, Ethernet,
+PCIe expansion, programming/debug access, and CPU GPIO / FPGA expansion.
+Reserve a board-edge region for later display hardware. Initial FPGA GPU work
+is compute and off-screen rendering, toward a Vulkan implementation without
+window-system integration (WSI). Conformance is a future hardware/driver goal,
+not a requirement for first-board bring-up. OpenGL through Zink is a later
+software possibility, contingent on Vulkan features.
+
+MPFS460 requires a different package/board. Upgrades mean device-specific
+bitstreams and assembly options, not a shared bitstream or hot-swappable chip.
+No schematic, stackup, memory part, or complete BOM has been selected yet.
+
+## 1. Freeze requirements and collect design inputs
+
+- [ ] Select exact MPFS025 orderable variant, speed grade, and temperature grade.
+      Compare T/TS/TL/TLS availability, price, tool licensing, and security needs.
+- [ ] Select the largest intended FCVG484 upgrade configuration for power sizing.
+- [ ] Define board dimensions, mounting holes, enclosure clearances, connector
+      locations, cooling space, input power source, and expansion power budget.
+- [ ] Decide RAM capacity, storage choice, Ethernet PHY interface, and desired
+      PCIe width/connector. Do not assume two controllers provide two x4 links;
+      FCVG484 exposes four transceiver lanes total.
+- [ ] Obtain applicable MSS technical reference, memory controller, PCI Express,
+      transceiver, power-up/reset, programming, and production errata documents.
+- [ ] Study BeagleV-Fire (MPFS025 FCVG484) and applicable Microchip reference
+      schematics. Record differences rather than copying them without review.
+- [ ] Resolve L7/L8 unused MSS reference-clock guidance if the clock plan leaves
+      them unused. Active clock use needs its own validated electrical design.
+
+## 2. Establish PCB feasibility before detailed pin assignment
+
+- [ ] Choose a fabrication/assembly provider and obtain its stackup options,
+      minimum trace/space, drill/via limits, copper weights, impedance tolerances,
+      BGA assembly capability, and prototype pricing.
+- [ ] Establish a provisional layer stack with continuous reference planes for
+      DDR, clocks, and PCIe. Determine layer count from actual escape/routing needs.
+- [ ] Trial-route the 0.8 mm-pitch FCVG484 escape and DDR placement. Decide whether
+      through vias suffice or HDI/microvias are necessary before committing.
+- [ ] Allocate placement regions for SoC, DDR, regulators, Ethernet, PCIe, debug,
+      GPIO headers, and future graphics. Keep decoupling access around the BGA.
+- [ ] Define impedance rules from the chosen stackup and interface documentation;
+      do not select trace dimensions from generic rules of thumb.
+- [ ] Reserve uninterrupted routing corridors and reference planes for high-speed
+      signals; plan return vias at layer changes and connector transitions.
+
+## 3. Create KiCad project and validated symbols
+
+- [ ] Create hierarchical schematic sheets: power input; power rails; SoC power;
+      SoC interfaces; clocks/reset; DDR; boot/storage; debug; Ethernet; PCIe;
+      GPIO/FPGA expansion; future display provisions.
+- [ ] Generate or validate the SoC multi-unit symbol against the uploaded PPATs.
+      Include every power/ground ball explicitly and distinguish NC from DNC.
+- [ ] Validate FCVG484 footprint, ball numbering/orientation, dimensions, courtyard,
+      solder-mask/paste rules, and pin-1 marking against mechanical drawings.
+- [ ] Maintain a pin-allocation table keyed by physical ball, with signal, bank,
+      voltage, alternate function, clock capability, and migration status.
+- [ ] Keep essential fabric connections on balls usable by MPFS025 and all upgrades.
+      Label larger-device-only GPIOs as optional and handle NC balls appropriately.
+- [ ] Check clock aliases, bank grouping, peripheral multiplexing, and selected
+      interfaces in Libero/MSS Configurator before freezing schematic pins.
+
+## 4. Power input, regulators, and sequencing
+
+- [ ] Choose input voltage/connector and design reverse-polarity, overcurrent,
+      surge/ESD protection as appropriate to the source and exposed connector.
+- [ ] Build a rail table: voltage/tolerance, estimated current/transients, ripple,
+      startup order, enable/PGOOD behavior, discharge, and all consuming blocks.
+- [ ] Estimate SoC power using Microchip tools for both the first implementation
+      and largest intended upgrade; include DDR, PHY, clocks, and expansion loads.
+- [ ] Select regulators, compensation, inductors/capacitors, and thermal margins.
+      Follow device-specific supply-noise requirements and regulator documentation.
+- [ ] Implement VDDI3 and VDDI5 startup requirements and verify full rail sequencing
+      against the power-up guide. Model failure/brownout and restart behavior.
+- [ ] Apply the documented SoC decoupling network, with justified component choices
+      and placement priorities; account for power/ground via access under the BGA.
+- [ ] Define required unused-supply connections separately from unused signal pins.
+- [ ] Prevent back-power through UART, JTAG, GPIO, PCIe, and display provisions.
+- [ ] Add rail measurement points and useful isolation/current-measurement options.
+
+## 5. Clocks, reset, and boot configuration
+
+- [ ] Choose and validate MSS clock source (dedicated Bank 5 REFCLK or supported
+      fabric PLL route), voltage standard, frequency, jitter, startup, and coupling.
+- [ ] Validate CPU, DDR, peripheral, and fabric clock relationships in the tools.
+      Reconcile the 625 MHz clock-guide figures with overview FMAX before selecting
+      actual operation; use applicable datasheet limits and validated configuration.
+- [ ] Plan PCIe reference clock separately, including source/distribution, electrical
+      standard, clock architecture, and permitted spread-spectrum behavior.
+- [ ] Add Ethernet PHY clocks and any separately needed fabric reference clocks.
+- [ ] Design reset supervisor/button and boot/configuration straps. Use DEVRST_N
+      for warm reset as required for PCIe/transceiver designs; coordinate DDR/PHY/
+
